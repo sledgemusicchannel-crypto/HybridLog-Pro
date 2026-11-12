@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>HybridLog Pro — HEV & EV Efficiency Tracker</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card: #131c31;
+      --card-alt: #1a2642;
+      --border: #263554;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --emerald: #10b981;
+      --emerald-dim: rgba(16, 185, 129, 0.15);
+      --cyan: #06b6d4;
+      --cyan-dim: rgba(6, 182, 212, 0.15);
+      --amber: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding-bottom: 84px;
+      line-height: 1.4;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #132a3a 100%);
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--emerald), var(--cyan));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #062118;
+      font-size: 16px;
+    }
+
+    .brand h1 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .brand span {
+      display: block;
+      font-size: 11px;
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .currency-select {
+      background: var(--card-alt);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      outline: none;
+    }
+
+    /* Container */
+    main {
+      padding: 14px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .tab-panel {
+      display: none;
+      animation: fadeIn 0.18s ease-out;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards & Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .kpi-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .kpi-value.emerald { color: var(--emerald); }
+    .kpi-value.cyan { color: var(--cyan); }
+    .kpi-value.amber { color: var(--amber); }
+
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Forms */
+    .mode-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+      background: var(--bg);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .mode-btn {
+      padding: 9px;
+      border: none;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .mode-btn.active.fuel {
+      background: var(--emerald-dim);
+      color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .mode-btn.active.ev {
+      background: var(--cyan-dim);
+      color: var(--cyan);
+      border: 1px solid rgba(6, 182, 212, 0.35);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    input, select {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--cyan);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--emerald), #059669);
+      color: #041f15;
+    }
+
+    .btn-cyan {
+      background: linear-gradient(135deg, var(--cyan), #0284c7);
+      color: #041d29;
+    }
+
+    .btn-outline {
+      background: var(--card-alt);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 6px 10px;
+      font-size: 12px;
+      width: auto;
+    }
+
+    /* Log Items */
+    .log-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 11px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .log-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 5px;
+      text-transform: uppercase;
+      margin-right: 6px;
+    }
+
+    .badge-fuel { background: var(--emerald-dim); color: var(--emerald); }
+    .badge-ev { background: var(--cyan-dim); color: var(--cyan); }
+
+    .log-main {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .log-meta {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* Maintenance Bars */
+    .maint-item {
+      margin-bottom: 12px;
+      background: var(--bg);
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    .maint-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .progress-bg {
+      width: 100%;
+      height: 8px;
+      background: var(--card-alt);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--emerald);
+      border-radius: 99px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-fill.warn { background: var(--amber); }
+    .progress-fill.due { background: var(--danger); }
+
+    /* Trip Result Box */
+    .result-banner {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(6, 182, 212, 0.14));
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 12px;
+      text-align: center;
+    }
+
+    .result-banner .big {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--emerald);
+    }
+
+    /* Bottom Navigation */
+    nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #0f172a;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 6px 4px;
+      z-index: 60;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      padding: 6px 2px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .nav-btn.active {
+      color: var(--emerald);
+    }
+
+    .nav-icon {
+      font-size: 18px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 72px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--emerald);
+      color: #041f15;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 9px 16px;
+      border-radius: 99px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.45);
+      z-index: 100;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <h1>HybridLog Pro</h1>
+        <span>APEX MOBILITY • HEV & EV</span>
+      </div>
+    </div>
+    <select id="currencySelect" class="currency-select" onchange="updateCurrency()">
+      <option value="₫">VND (₫)</option>
+      <option value="$">USD ($)</option>
+      <option value="€">EUR (€)</option>
+      <option value="£">GBP (£)</option>
+      <option value="¥">JPY/CNY (¥)</option>
+      <option value="฿">THB (฿)</option>
+      <option value="S$">SGD (S$)</option>
+    </select>
+  </header>
+
+  <div id="toast" class="toast">Saved!</div>
+
+  <main>
+    <!-- TAB 1: DASHBOARD & LOGGING -->
+    <section id="tab-dash" class="tab-panel active">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Fuel Economy</div>
+          <div id="kpi-l100" class="kpi-value emerald">-- L/100km</div>
+          <div id="kpi-kml" class="kpi-sub">-- km/L</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Blended Cost / km</div>
+          <div id="kpi-costkm" class="kpi-value cyan">--</div>
+          <div id="kpi-dist" class="kpi-sub">0 km tracked</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Total Energy Spend</div>
+          <div id="kpi-spend" class="kpi-value amber">0</div>
+          <div id="kpi-split-spend" class="kpi-sub">Fuel: 0 • EV: 0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">EV Efficiency</div>
+          <div id="kpi-kwh" class="kpi-value">-- kWh</div>
+          <div id="kpi-ev-sessions" class="kpi-sub">0 charge sessions</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>➕ Log Fill-Up or Charge</span>
+          <span id="last-odo-badge" style="font-size:11px; color:var(--cyan);">Last Odo: 0 km</span>
+        </div>
+
+        <div class="mode-switch">
+          <button type="button" id="btn-mode-fuel" class="mode-btn active fuel" onclick="setEntryMode('fuel')">⛽ Fuel (Liters)</button>
+          <button type="button" id="btn-mode-ev" class="mode-btn" onclick="setEntryMode('ev')">🔌 EV Charge (kWh)</button>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label for="in-date">Date</label>
+            <input type="date" id="in-date" />
+          </div>
+          <div>
+            <label for="in-odo">Odometer (km)</label>
+            <input type="number" id="in-odo" placeholder="e.g. 12450" inputmode="decimal" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label id="lbl-volume" for="in-vol">Fuel Added (Liters)</label>
+            <input type="number" step="0.01" id="in-vol" placeholder="e.g. 38.5" inputmode="decimal" oninput="autoCalcTotal()" />
+          </div>
+          <div>
+            <label id="lbl-price" for="in-price">Price per Liter</label>
+            <input type="number" step="0.01" id="in-price" placeholder="e.g. 21500" inputmode="decimal" oninput="autoCalcTotal()" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label for="in-total">Total Cost</label>
+            <input type="number" step="0.01" id="in-total" placeholder="Auto-calculated" inputmode="decimal" />
+          </div>
+          <div>
+            <label for="in-note">Station / Charger</label>
+            <input type="text" id="in-note" placeholder="e.g. Petrolimex / Home" />
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary" onclick="addLogEntry()">Save Entry</button>
+      </div>
+    </section>
+
+    <!-- TAB 2: TRIP COST & SPLIT CALCULATOR -->
+    <section id="tab-trip" class="tab-panel">
+      <div class="card">
+        <div class="card-title">🧭 Trip Cost & Passenger Split</div>
+
+        <div class="form-row">
+          <div>
+            <label for="trip-dist">Trip Distance (km)</label>
+            <input type="number" id="trip-dist" value="120" inputmode="decimal" oninput="calcTrip()" />
+          </div>
+          <div>
+            <label for="trip-eff">Consumption (L/100km)</label>
+            <input type="number" step="0.1" id="trip-eff" value="5.2" inputmode="decimal" oninput="calcTrip()" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label for="trip-fuel-price">Fuel Price / Liter</label>
+            <input type="number" step="0.01" id="trip-fuel-price" value="21500" inputmode="decimal" oninput="calcTrip()" />
+          </div>
+          <div>
+            <label for="trip-ev-cost">Extra EV Charge Cost</label>
+            <input type="number" step="0.01" id="trip-ev-cost" value="0" inputmode="decimal" oninput="calcTrip()" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div>
+            <label for="trip-tolls">Tolls / Parking Fees</label>
+            <input type="number" step="0.01" id="trip-tolls" value="0" inputmode="decimal" oninput="calcTrip()" />
+          </div>
+          <div>
+            <label for="trip-pax">Split Between (People)</label>
+            <input type="number" id="trip-pax" value="1" min="1" inputmode="numeric" oninput="calcTrip()" />
+          </div>
+        </div>
+
+        <div class="result-banner">
+          <div style="font-size:12px; color:var(--muted);">ESTIMATED TOTAL TRIP COST</div>
+          <div id="trip-total-out" class="big">0</div>
+          <div id="trip-split-out" style="font-size:13px; color:var(--cyan); font-weight:700; margin-top:4px;">Per Person: 0</div>
+          <div id="trip-fuel-used" style="font-size:11px; color:var(--muted); margin-top:4px;">Fuel Needed: 0.00 L</div>
+        </div>
+
+        <button type="button" class="btn btn-outline" style="margin-top:12px;" onclick="copyTripSummary()">📋 Copy Trip Breakdown</button>
+      </div>
+    </section>
+
+    <!-- TAB 3: MAINTENANCE TRACKER -->
+    <section id="tab-maint" class="tab-panel">
+      <div class="card">
+        <div class="card-title">
+          <span>🛠️ Hybrid Service Intervals</span>
+          <span id="maint-odo-display" style="font-size:11px; color:var(--emerald);">Current: 0 km</span>
+        </div>
+        <div id="maint-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Update Current Odometer</div>
+        <div class="form-row">
+          <div>
+            <input type="number" id="manual-odo" placeholder="Enter current km" inputmode="decimal" />
+          </div>
+          <div>
+            <button type="button" class="btn btn-cyan" onclick="setManualOdo()">Update Odo</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: HISTORY & EXPORT -->
+    <section id="tab-logs" class="tab-panel">
+      <div class="card">
+        <div class="card-title">
+          <span>📊 Logbook History</span>
+          <span id="log-count" style="font-size:11px; color:var(--muted);">0 entries</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
+          <button type="button" class="btn btn-cyan" onclick="exportCSV()">⬇️ Download CSV</button>
+          <button type="button" class="btn btn-outline" onclick="copyCSVClipboard()">📋 Copy CSV</button>
+        </div>
+
+        <div id="history-list"></div>
+
+        <button type="button" class="btn btn-danger" style="width:100%; margin-top:14px;" onclick="clearAllData()">Reset All App Data</button>
+      </div>
+    </section>
+  </main>
+
+  <nav>
+    <button type="button" class="nav-btn active" onclick="switchTab('dash', this)">
+      <span class="nav-icon">⚡</span>
+      <span>Dashboard</span>
+    </button>
+    <button type="button" class="nav-btn" onclick="switchTab('trip', this)">
+      <span class="nav-icon">🧭</span>
+      <span>Trip Split</span>
+    </button>
+    <button type="button" class="nav-btn" onclick="switchTab('maint', this)">
+      <span class="nav-icon">🛠️</span>
+      <span>Service</span>
+    </button>
+    <button type="button" class="nav-btn" onclick="switchTab('logs', this)">
+      <span class="nav-icon">📋</span>
+      <span>History</span>
+    </button>
+  </nav>
+
+  <script>
+    const STORAGE_KEY = 'apex_hybridlog_v1';
+
+    let state = {
+      currency: '₫',
+      currentOdo: 0,
+      logs: [],
+      services: [
+        { id: 'oil', name: 'Engine Oil & Filter', interval: 10000, lastOdo: 0 },
+        { id: 'hybrid_fan', name: 'Hybrid Battery Cooling Filter', interval: 15000, lastOdo: 0 },
+        { id: 'tires', name: 'Tire Rotation & Alignment', interval: 10000, lastOdo: 0 },
+        { id: 'cabin_air', name: 'Cabin & Engine Air Filters', interval: 20000, lastOdo: 0 },
+        { id: 'brake', name: 'Brake Fluid & Regen Check', interval: 40000, lastOdo: 0 }
+      ]
+    };
+
+    let entryMode = 'fuel';
+
+    function init() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          state = { ...state, ...JSON.parse(saved) };
+        } catch (e) { console.error(e); }
+      }
+      document.getElementById('currencySelect').value = state.currency;
+      document.getElementById('in-date').valueAsDate = new Date();
+      renderAll();
+      calcTrip();
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 2200);
+    }
+
+    function formatMoney(val) {
+      const num = Number(val) || 0;
+      if (state.currency === '₫' || state.currency === '¥') {
+        return state.currency + Math.round(num).toLocaleString();
+      }
+      return state.currency + num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function updateCurrency() {
+      state.currency = document.getElementById('currencySelect').value;
+      saveState();
+      renderAll();
+      calcTrip();
+    }
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    function setEntryMode(mode) {
+      entryMode = mode;
+      const fBtn = document.getElementById('btn-mode-fuel');
+      const eBtn = document.getElementById('btn-mode-ev');
+      if (mode === 'fuel') {
+        fBtn.className = 'mode-btn active fuel';
+        eBtn.className = 'mode-btn';
+        document.getElementById('lbl-volume').textContent = 'Fuel Added (Liters)';
+        document.getElementById('lbl-price').textContent = 'Price per Liter';
+        document.getElementById('in-vol').placeholder = 'e.g. 38.5';
+      } else {
+        eBtn.className = 'mode-btn active ev';
+        fBtn.className = 'mode-btn';
+        document.getElementById('lbl-volume').textContent = 'Energy Added (kWh)';
+        document.getElementById('lbl-price').textContent = 'Price per kWh';
+        document.getElementById('in-vol').placeholder = 'e.g. 18.4';
+      }
+    }
+
+    function autoCalcTotal() {
+      const vol = parseFloat(document.getElementById('in-vol').value) || 0;
+      const price = parseFloat(document.getElementById('in-price').value) || 0;
+      if (vol > 0 && price > 0) {
+        document.getElementById('in-total').value = (vol * price).toFixed(state.currency === '₫' ? 0 : 2);
+      }
+    }
+
+    function addLogEntry() {
+      const date = document.getElementById('in-date').value || new Date().toISOString().slice(0, 10);
+      const odo = parseFloat(document.getElementById('in-odo').value);
+      const vol = parseFloat(document.getElementById('in-vol').value) || 0;
+      const price = parseFloat(document.getElementById('in-price').value) || 0;
+      let total = parseFloat(document.getElementById('in-total').value) || (vol * price);
+      const note = document.getElementById('in-note').value.trim();
+
+      if (!odo || odo <= 0) {
+        showToast('Please enter a valid Odometer reading');
+        return;
+      }
+      if (vol <= 0 && total <= 0) {
+        showToast('Enter volume or total cost');
+        return;
+      }
+
+      const entry = {
+        id: Date.now(),
+        type: entryMode,
+        date,
+        odo,
+        vol,
+        price,
+        total,
+        note
+      };
+
+      state.logs.push(entry);
+      state.logs.sort((a, b) => a.odo - b.odo);
+      if (odo > state.currentOdo) {
+        state.currentOdo = odo;
+      }
+
+      saveState();
+      renderAll();
+
+      // Clear inputs
+      document.getElementById('in-vol').value = '';
+      document.getElementById('in-total').value = '';
+      document.getElementById('in-note').value = '';
+      showToast('Entry logged!');
+    }
+
+    function deleteLog(id) {
+      state.logs = state.logs.filter(l => l.id !== id);
+      saveState();
+      renderAll();
+      showToast('Entry deleted');
+    }
+
+    function setManualOdo() {
+      const val = parseFloat(document.getElementById('manual-odo').value);
+      if (val && val > 0) {
+        state.currentOdo = val;
+        saveState();
+        renderAll();
+        document.getElementById('manual-odo').value = '';
+        showToast('Odometer updated');
+      }
+    }
+
+    function resetService(id) {
+      const svc = state.services.find(s => s.id === id);
+      if (svc) {
+        svc.lastOdo = state.currentOdo;
+        saveState();
+        renderMaintenance();
+        showToast(svc.name + ' reset to ' + state.currentOdo + ' km');
+      }
+    }
+
+    function renderAll() {
+      renderKPIs();
+      renderMaintenance();
+      renderHistory();
+    }
+
+    function renderKPIs() {
+      const logs = state.logs;
+      const latestOdo = logs.length ? Math.max(state.currentOdo, logs[logs.length - 1].odo) : state.currentOdo;
+      document.getElementById('last-odo-badge').textContent = `Last Odo: ${latestOdo.toLocaleString()} km`;
+      document.getElementById('maint-odo-display').textContent = `Current: ${latestOdo.toLocaleString()} km`;
+
+      let fuelSpend = 0, evSpend = 0, totalKwh = 0, evCount = 0;
+      logs.forEach(l => {
+        if (l.type === 'fuel') fuelSpend += l.total;
+        else {
+          evSpend += l.total;
+          totalKwh += l.vol;
+          evCount++;
+        }
+      });
+
+      const totalSpend = fuelSpend + evSpend;
+      document.getElementById('kpi-spend').textContent = formatMoney(totalSpend);
+      document.getElementById('kpi-split-spend').textContent = `Fuel: ${formatMoney(fuelSpend)} • EV: ${formatMoney(evSpend)}`;
+      document.getElementById('kpi-kwh').textContent = `${totalKwh.toFixed(1)} kWh`;
+      document.getElementById('kpi-ev-sessions').textContent = `${evCount} charge session${evCount === 1 ? '' : 's'}`;
+
+      if (logs.length >= 2) {
+        const firstOdo = logs[0].odo;
+        const lastOdo = logs[logs.length - 1].odo;
+        const dist = lastOdo - firstOdo;
+
+        if (dist > 0) {
+          document.getElementById('kpi-dist').textContent = `${dist.toLocaleString()} km tracked`;
+          const costPerKm = totalSpend / dist;
+          document.getElementById('kpi-costkm').textContent = `${formatMoney(costPerKm)}/km`;
+
+          // Fuel liters after first fill-up
+          let fuelAfterFirst = 0;
+          for (let i = 1; i < logs.length; i++) {
+            if (logs[i].type === 'fuel') fuelAfterFirst += logs[i].vol;
+          }
+
+          if (fuelAfterFirst > 0) {
+            const l100 = (fuelAfterFirst / dist) * 100;
+            const kml = dist / fuelAfterFirst;
+            document.getElementById('kpi-l100').textContent = `${l100.toFixed(2)} L/100km`;
+            document.getElementById('kpi-kml').textContent = `${kml.toFixed(2)} km/L`;
+            document.getElementById('trip-eff').value = l100.toFixed(1);
+          }
+        }
+      } else {
+        document.getElementById('kpi-l100').textContent = '-- L/100km';
+        document.getElementById('kpi-kml').textContent = 'Need 2+ logs';
+        document.getElementById('kpi-costkm').textContent = '--';
+        document.getElementById('kpi-dist').textContent = '0 km tracked';
+      }
+    }
+
+    function renderMaintenance() {
+      const container = document.getElementById('maint-list');
+      container.innerHTML = '';
+      state.services.forEach(s => {
+        const driven = Math.max(0, state.currentOdo - s.lastOdo);
+        const remaining = s.interval - driven;
+        const pct = Math.min(100, Math.round((driven / s.interval) * 100));
+        let barClass = '';
+        if (pct >= 100) barClass = 'due';
+        else if (pct >= 80) barClass = 'warn';
+
+        const div = document.createElement('div');
+        div.className = 'maint-item';
+        div.innerHTML = `
+          <div class="maint-header">
+            <span>${s.name}</span>
+            <span style="color:${pct >= 100 ? 'var(--danger)' : 'var(--muted)'}">
+              ${remaining > 0 ? remaining.toLocaleString() + ' km left' : 'DUE NOW'}
+            </span>
+          </div>
+          <div class="progress-bg">
+            <div class="progress-fill ${barClass}" style="width:${pct}%"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:7px;">
+            <span style="font-size:11px; color:var(--muted);">Every ${s.interval.toLocaleString()} km (Last: ${s.lastOdo.toLocaleString()})</span>
+            <button type="button" class="btn btn-outline" style="width:auto; padding:4px 9px; font-size:11px;" onclick="resetService('${s.id}')">Mark Done</button>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function renderHistory() {
+      const list = document.getElementById('history-list');
+      document.getElementById('log-count').textContent = `${state.logs.length} entries`;
+      if (!state.logs.length) {
+        list.innerHTML = '<div style="text-align:center; color:var(--muted); font-size:13px; padding:20px 0;">No fuel or EV logs recorded yet.</div>';
+        return;
+      }
+
+      list.innerHTML = '';
+      [...state.logs].reverse().forEach(l => {
+        const unit = l.type === 'fuel' ? 'L' : 'kWh';
+        const badge = l.type === 'fuel'
+          ? '<span class="log-badge badge-fuel">FUEL</span>'
+          : '<span class="log-badge badge-ev">EV</span>';
+
+        const item = document.createElement('div');
+        item.className = 'log-item';
+        item.innerHTML = `
+          <div>
+            <div class="log-main">${badge} ${l.vol.toFixed(2)} ${unit} • ${formatMoney(l.total)}</div>
+            <div class="log-meta">${l.date} • Odo: ${l.odo.toLocaleString()} km ${l.note ? '• ' + l.note : ''}</div>
+          </div>
+          <button type="button" class="btn btn-danger" onclick="deleteLog(${l.id})">✕</button>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function calcTrip() {
+      const dist = parseFloat(document.getElementById('trip-dist').value) || 0;
+      const eff = parseFloat(document.getElementById('trip-eff').value) || 0;
+      const fuelPrice = parseFloat(document.getElementById('trip-fuel-price').value) || 0;
+      const evCost = parseFloat(document.getElementById('trip-ev-cost').value) || 0;
+      const tolls = parseFloat(document.getElementById('trip-tolls').value) || 0;
+      const pax = Math.max(1, parseInt(document.getElementById('trip-pax').value) || 1);
+
+      const liters = (dist / 100) * eff;
+      const fuelCost = liters * fuelPrice;
+      const total = fuelCost + evCost + tolls;
+      const perPerson = total / pax;
+
+      document.getElementById('trip-total-out').textContent = formatMoney(total);
+      document.getElementById('trip-split-out').textContent = `Per Person (${pax}): ${formatMoney(perPerson)}`;
+      document.getElementById('trip-fuel-used').textContent = `Fuel Needed: ${liters.toFixed(2)} L (${formatMoney(fuelCost)})`;
+    }
+
+    function copyTripSummary() {
+      const dist = document.getElementById('trip-dist').value;
+      const total = document.getElementById('trip-total-out').textContent;
+      const split = document.getElementById('trip-split-out').textContent;
+      const fuel = document.getElementById('trip-fuel-used').textContent;
+      const text = `HybridLog Trip Estimate (${dist} km)\nTotal Cost: ${total}\n${split}\n${fuel}`;
+      navigator.clipboard.writeText(text).then(() => showToast('Trip summary copied!'));
+    }
+
+    function buildCSV() {
+      const headers = ['Date', 'Type', 'Odometer_km', 'Volume_L_or_kWh', 'Unit_Price', 'Total_Cost', 'Note'];
+      const rows = state.logs.map(l => [
+        l.date,
+        l.type.toUpperCase(),
+        l.odo,
+        l.vol,
+        l.price,
+        l.total,
+        `"${(l.note || '').replace(/"/g, '""')}"`
+      ].join(','));
+      return [headers.join(','), ...rows].join('\n');
+    }
+
+    function exportCSV() {
+      if (!state.logs.length) {
+        showToast('No logs to export');
+        return;
+      }
+      const csv = buildCSV();
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `HybridLog_Export_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('CSV downloaded!');
+    }
+
+    function copyCSVClipboard() {
+      if (!state.logs.length) {
+        showToast('No logs to copy');
+        return;
+      }
+      navigator.clipboard.writeText(buildCSV()).then(() => showToast('CSV copied to clipboard!'));
+    }
+
+    function clearAllData() {
+      if (confirm('Delete all saved fuel logs and reset odometer?')) {
+        localStorage.removeItem(STORAGE_KEY);
+        location.reload();
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
