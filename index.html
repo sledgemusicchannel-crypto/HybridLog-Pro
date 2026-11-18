@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#0f172a" />
-  <title>HybridLog Pro — HEV & EV Efficiency Tracker</title>
+  <title id="appTitle">HybridLog Pro — HEV & EV Efficiency Tracker</title>
   <style>
     :root {
       --bg: #0b1120;
@@ -47,12 +47,14 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 8px;
     }
 
     .brand {
       display: flex;
       align-items: center;
       gap: 10px;
+      min-width: 0;
     }
 
     .brand-icon {
@@ -66,22 +68,36 @@
       font-weight: 800;
       color: #062118;
       font-size: 16px;
+      flex-shrink: 0;
     }
 
     .brand h1 {
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 700;
       letter-spacing: 0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .brand span {
       display: block;
-      font-size: 11px;
+      font-size: 10px;
       color: var(--cyan);
       font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .currency-select {
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .select-dropdown {
       background: var(--card-alt);
       color: var(--text);
       border: 1px solid var(--border);
@@ -90,6 +106,7 @@
       font-size: 12px;
       font-weight: 600;
       outline: none;
+      cursor: pointer;
     }
 
     /* Container */
@@ -429,15 +446,24 @@
         <span>APEX MOBILITY • HEV & EV</span>
       </div>
     </div>
-    <select id="currencySelect" class="currency-select" onchange="updateCurrency()">
-      <option value="₫">VND (₫)</option>
-      <option value="$">USD ($)</option>
-      <option value="€">EUR (€)</option>
-      <option value="£">GBP (£)</option>
-      <option value="¥">JPY/CNY (¥)</option>
-      <option value="฿">THB (฿)</option>
-      <option value="S$">SGD (S$)</option>
-    </select>
+    <div class="header-controls">
+      <select id="langSelect" class="select-dropdown" onchange="updateLanguage()">
+        <option value="en">EN</option>
+        <option value="vi">VI</option>
+        <option value="zh">中文</option>
+        <option value="ja">日本語</option>
+        <option value="ko">한국어</option>
+      </select>
+      <select id="currencySelect" class="select-dropdown" onchange="updateCurrency()">
+        <option value="₫">VND (₫)</option>
+        <option value="$">USD ($)</option>
+        <option value="€">EUR (€)</option>
+        <option value="£">GBP (£)</option>
+        <option value="¥">JPY/CNY (¥)</option>
+        <option value="฿">THB (฿)</option>
+        <option value="S$">SGD (S$)</option>
+      </select>
+    </div>
   </header>
 
   <div id="toast" class="toast">Saved!</div>
@@ -447,22 +473,22 @@
     <section id="tab-dash" class="tab-panel active">
       <div class="kpi-grid">
         <div class="kpi-card">
-          <div class="kpi-label">Avg Fuel Economy</div>
+          <div class="kpi-label" id="lbl-kpi-fuel">Avg Fuel Economy</div>
           <div id="kpi-l100" class="kpi-value emerald">-- L/100km</div>
           <div id="kpi-kml" class="kpi-sub">-- km/L</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Blended Cost / km</div>
+          <div class="kpi-label" id="lbl-kpi-cost">Blended Cost / km</div>
           <div id="kpi-costkm" class="kpi-value cyan">--</div>
           <div id="kpi-dist" class="kpi-sub">0 km tracked</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">Total Energy Spend</div>
+          <div class="kpi-label" id="lbl-kpi-spend">Total Energy Spend</div>
           <div id="kpi-spend" class="kpi-value amber">0</div>
           <div id="kpi-split-spend" class="kpi-sub">Fuel: 0 • EV: 0</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-label">EV Efficiency</div>
+          <div class="kpi-label" id="lbl-kpi-ev">EV Efficiency</div>
           <div id="kpi-kwh" class="kpi-value">-- kWh</div>
           <div id="kpi-ev-sessions" class="kpi-sub">0 charge sessions</div>
         </div>
@@ -470,7 +496,7 @@
 
       <div class="card">
         <div class="card-title">
-          <span>➕ Log Fill-Up or Charge</span>
+          <span id="lbl-log-title">➕ Log Fill-Up or Charge</span>
           <span id="last-odo-badge" style="font-size:11px; color:var(--cyan);">Last Odo: 0 km</span>
         </div>
 
@@ -481,11 +507,11 @@
 
         <div class="form-row">
           <div>
-            <label for="in-date">Date</label>
+            <label id="lbl-date" for="in-date">Date</label>
             <input type="date" id="in-date" />
           </div>
           <div>
-            <label for="in-odo">Odometer (km)</label>
+            <label id="lbl-odo" for="in-odo">Odometer (km)</label>
             <input type="number" id="in-odo" placeholder="e.g. 12450" inputmode="decimal" />
           </div>
         </div>
@@ -503,65 +529,65 @@
 
         <div class="form-row">
           <div>
-            <label for="in-total">Total Cost</label>
+            <label id="lbl-total" for="in-total">Total Cost</label>
             <input type="number" step="0.01" id="in-total" placeholder="Auto-calculated" inputmode="decimal" />
           </div>
           <div>
-            <label for="in-note">Station / Charger</label>
+            <label id="lbl-note" for="in-note">Station / Charger</label>
             <input type="text" id="in-note" placeholder="e.g. Petrolimex / Home" />
           </div>
         </div>
 
-        <button type="button" class="btn btn-primary" onclick="addLogEntry()">Save Entry</button>
+        <button type="button" class="btn btn-primary" id="btn-save" onclick="addLogEntry()">Save Entry</button>
       </div>
     </section>
 
     <!-- TAB 2: TRIP COST & SPLIT CALCULATOR -->
     <section id="tab-trip" class="tab-panel">
       <div class="card">
-        <div class="card-title">🧭 Trip Cost & Passenger Split</div>
+        <div class="card-title" id="lbl-trip-title">🧭 Trip Cost & Passenger Split</div>
 
         <div class="form-row">
           <div>
-            <label for="trip-dist">Trip Distance (km)</label>
+            <label id="lbl-trip-dist" for="trip-dist">Trip Distance (km)</label>
             <input type="number" id="trip-dist" value="120" inputmode="decimal" oninput="calcTrip()" />
           </div>
           <div>
-            <label for="trip-eff">Consumption (L/100km)</label>
+            <label id="lbl-trip-eff" for="trip-eff">Consumption (L/100km)</label>
             <input type="number" step="0.1" id="trip-eff" value="5.2" inputmode="decimal" oninput="calcTrip()" />
           </div>
         </div>
 
         <div class="form-row">
           <div>
-            <label for="trip-fuel-price">Fuel Price / Liter</label>
+            <label id="lbl-trip-fuel" for="trip-fuel-price">Fuel Price / Liter</label>
             <input type="number" step="0.01" id="trip-fuel-price" value="21500" inputmode="decimal" oninput="calcTrip()" />
           </div>
           <div>
-            <label for="trip-ev-cost">Extra EV Charge Cost</label>
+            <label id="lbl-trip-ev" for="trip-ev-cost">Extra EV Charge Cost</label>
             <input type="number" step="0.01" id="trip-ev-cost" value="0" inputmode="decimal" oninput="calcTrip()" />
           </div>
         </div>
 
         <div class="form-row">
           <div>
-            <label for="trip-tolls">Tolls / Parking Fees</label>
+            <label id="lbl-trip-tolls" for="trip-tolls">Tolls / Parking Fees</label>
             <input type="number" step="0.01" id="trip-tolls" value="0" inputmode="decimal" oninput="calcTrip()" />
           </div>
           <div>
-            <label for="trip-pax">Split Between (People)</label>
+            <label id="lbl-trip-pax" for="trip-pax">Split Between (People)</label>
             <input type="number" id="trip-pax" value="1" min="1" inputmode="numeric" oninput="calcTrip()" />
           </div>
         </div>
 
         <div class="result-banner">
-          <div style="font-size:12px; color:var(--muted);">ESTIMATED TOTAL TRIP COST</div>
+          <div style="font-size:12px; color:var(--muted);" id="lbl-est-total">ESTIMATED TOTAL TRIP COST</div>
           <div id="trip-total-out" class="big">0</div>
           <div id="trip-split-out" style="font-size:13px; color:var(--cyan); font-weight:700; margin-top:4px;">Per Person: 0</div>
           <div id="trip-fuel-used" style="font-size:11px; color:var(--muted); margin-top:4px;">Fuel Needed: 0.00 L</div>
         </div>
 
-        <button type="button" class="btn btn-outline" style="margin-top:12px;" onclick="copyTripSummary()">📋 Copy Trip Breakdown</button>
+        <button type="button" class="btn btn-outline" style="margin-top:12px;" id="btn-copy-trip" onclick="copyTripSummary()">📋 Copy Trip Breakdown</button>
       </div>
     </section>
 
@@ -569,20 +595,20 @@
     <section id="tab-maint" class="tab-panel">
       <div class="card">
         <div class="card-title">
-          <span>🛠️ Hybrid Service Intervals</span>
+          <span id="lbl-maint-title">🛠️ Hybrid Service Intervals</span>
           <span id="maint-odo-display" style="font-size:11px; color:var(--emerald);">Current: 0 km</span>
         </div>
         <div id="maint-list"></div>
       </div>
 
       <div class="card">
-        <div class="card-title">Update Current Odometer</div>
+        <div class="card-title" id="lbl-update-odo">Update Current Odometer</div>
         <div class="form-row">
           <div>
             <input type="number" id="manual-odo" placeholder="Enter current km" inputmode="decimal" />
           </div>
           <div>
-            <button type="button" class="btn btn-cyan" onclick="setManualOdo()">Update Odo</button>
+            <button type="button" class="btn btn-cyan" id="btn-update-odo" onclick="setManualOdo()">Update Odo</button>
           </div>
         </div>
       </div>
@@ -592,18 +618,18 @@
     <section id="tab-logs" class="tab-panel">
       <div class="card">
         <div class="card-title">
-          <span>📊 Logbook History</span>
+          <span id="lbl-history-title">📊 Logbook History</span>
           <span id="log-count" style="font-size:11px; color:var(--muted);">0 entries</span>
         </div>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;">
-          <button type="button" class="btn btn-cyan" onclick="exportCSV()">⬇️ Download CSV</button>
-          <button type="button" class="btn btn-outline" onclick="copyCSVClipboard()">📋 Copy CSV</button>
+          <button type="button" class="btn btn-cyan" id="btn-dl-csv" onclick="exportCSV()">⬇️ Download CSV</button>
+          <button type="button" class="btn btn-outline" id="btn-copy-csv" onclick="copyCSVClipboard()">📋 Copy CSV</button>
         </div>
 
         <div id="history-list"></div>
 
-        <button type="button" class="btn btn-danger" style="width:100%; margin-top:14px;" onclick="clearAllData()">Reset All App Data</button>
+        <button type="button" class="btn btn-danger" style="width:100%; margin-top:14px;" id="btn-reset-data" onclick="clearAllData()">Reset All App Data</button>
       </div>
     </section>
   </main>
@@ -611,26 +637,27 @@
   <nav>
     <button type="button" class="nav-btn active" onclick="switchTab('dash', this)">
       <span class="nav-icon">⚡</span>
-      <span>Dashboard</span>
+      <span id="nav-dash">Dashboard</span>
     </button>
     <button type="button" class="nav-btn" onclick="switchTab('trip', this)">
       <span class="nav-icon">🧭</span>
-      <span>Trip Split</span>
+      <span id="nav-trip">Trip Split</span>
     </button>
     <button type="button" class="nav-btn" onclick="switchTab('maint', this)">
       <span class="nav-icon">🛠️</span>
-      <span>Service</span>
+      <span id="nav-maint">Service</span>
     </button>
     <button type="button" class="nav-btn" onclick="switchTab('logs', this)">
       <span class="nav-icon">📋</span>
-      <span>History</span>
+      <span id="nav-history">History</span>
     </button>
   </nav>
 
   <script>
-    const STORAGE_KEY = 'apex_hybridlog_v1';
+    const STORAGE_KEY = 'apex_hybridlog_v2';
 
     let state = {
+      lang: 'en',
       currency: '₫',
       currentOdo: 0,
       logs: [],
@@ -645,6 +672,264 @@
 
     let entryMode = 'fuel';
 
+    const translations = {
+      en: {
+        appTitle: "HybridLog Pro — HEV & EV Efficiency Tracker",
+        lblKpiFuel: "Avg Fuel Economy",
+        lblKpiCost: "Blended Cost / km",
+        lblKpiSpend: "Total Energy Spend",
+        lblKpiEv: "EV Efficiency",
+        lblLogTitle: "➕ Log Fill-Up or Charge",
+        btnFuelMode: "⛽ Fuel (Liters)",
+        btnEvMode: "🔌 EV Charge (kWh)",
+        lblDate: "Date",
+        lblOdo: "Odometer (km)",
+        lblVolFuel: "Fuel Added (Liters)",
+        lblVolEv: "Energy Added (kWh)",
+        lblPriceFuel: "Price per Liter",
+        lblPriceEv: "Price per kWh",
+        lblTotal: "Total Cost",
+        lblNote: "Station / Charger",
+        btnSave: "Save Entry",
+        lblTripTitle: "🧭 Trip Cost & Passenger Split",
+        lblTripDist: "Trip Distance (km)",
+        lblTripEff: "Consumption (L/100km)",
+        lblTripFuel: "Fuel Price / Liter",
+        lblTripEv: "Extra EV Charge Cost",
+        lblTripTolls: "Tolls / Parking Fees",
+        lblTripPax: "Split Between (People)",
+        lblEstTotal: "ESTIMATED TOTAL TRIP COST",
+        btnCopyTrip: "📋 Copy Trip Breakdown",
+        lblMaintTitle: "🛠️ Hybrid Service Intervals",
+        lblUpdateOdo: "Update Current Odometer",
+        btnUpdateOdo: "Update Odo",
+        lblHistoryTitle: "📊 Logbook History",
+        btnDlCsv: "⬇️ Download CSV",
+        btnCopyCsv: "📋 Copy CSV",
+        btnResetData: "Reset All App Data",
+        navDash: "Dashboard",
+        navTrip: "Trip Split",
+        navMaint: "Service",
+        navHistory: "History",
+        toastSaved: "Saved!",
+        toastLogged: "Entry logged!",
+        toastDeleted: "Entry deleted",
+        toastOdoUpdated: "Odometer updated",
+        toastTripCopied: "Trip summary copied!",
+        toastCsvDl: "CSV downloaded!",
+        toastCsvCopied: "CSV copied to clipboard!",
+        needMoreLogs: "Need 2+ logs",
+        dueNow: "DUE NOW",
+        kmLeft: "km left",
+        markDone: "Mark Done",
+        noLogs: "No fuel or EV logs recorded yet."
+      },
+      vi: {
+        appTitle: "HybridLog Pro — Trình Theo Dõi Hiệu Suất HEV & EV",
+        lblKpiFuel: "Tiêu Hao Nhiên Liệu TB",
+        lblKpiCost: "Chi Phí / km",
+        lblKpiSpend: "Tổng Chi Phí Năng Lượng",
+        lblKpiEv: "Hiệu Suất EV",
+        lblLogTitle: "➕ Ghi Nhận Đổ Xăng / Sạc Điện",
+        btnFuelMode: "⛽ Xăng (Lít)",
+        btnEvMode: "🔌 Sạc EV (kWh)",
+        lblDate: "Ngày",
+        lblOdo: "Odometer (km)",
+        lblVolFuel: "Lượng Xăng (Lít)",
+        lblVolEv: "Năng Lượng (kWh)",
+        lblPriceFuel: "Giá Mỗi Lít",
+        lblPriceEv: "Giá Mỗi kWh",
+        lblTotal: "Tổng Chi Phí",
+        lblNote: "Trạm Xăng / Sạc",
+        btnSave: "Lưu Bản Ghi",
+        lblTripTitle: "🧭 Tính Chi Phí & Chia Tiền Chuyến Đi",
+        lblTripDist: "Khoảng Cách (km)",
+        lblTripEff: "Mức Tiêu Hao (L/100km)",
+        lblTripFuel: "Giá Xăng / Lít",
+        lblTripEv: "Phí Sạc EV Thêm",
+        lblTripTolls: "Phí Cầu Đường / Gửi Xe",
+        lblTripPax: "Chia Cho (Người)",
+        lblEstTotal: "ƯỚC TÍNH TỔNG CHI PHÍ CHUYẾN ĐI",
+        btnCopyTrip: "📋 Sao Chép Bảng Kê",
+        lblMaintTitle: "🛠️ Lịch Bảo Dưỡng Hybrid",
+        lblUpdateOdo: "Cập Nhật Odometer Hiện Tại",
+        btnUpdateOdo: "Cập Nhật",
+        lblHistoryTitle: "📊 Lịch Sử Nhật Ký",
+        btnDlCsv: "⬇️ Tải Xuống CSV",
+        btnCopyCsv: "📋 Sao Chép CSV",
+        btnResetData: "Đặt Lại Toàn Bộ Dữ Liệu",
+        navDash: "Tổng Quan",
+        navTrip: "Chia Chuyến Đi",
+        navMaint: "Bảo Dưỡng",
+        navHistory: "Lịch Sử",
+        toastSaved: "Đã lưu!",
+        toastLogged: "Đã ghi nhận!",
+        toastDeleted: "Đã xóa bản ghi",
+        toastOdoUpdated: "Đã cập nhật odo",
+        toastTripCopied: "Đã sao chép bảng kê chuyến đi!",
+        toastCsvDl: "Đã tải xuống CSV!",
+        toastCsvCopied: "Đã sao chép CSV vào bộ nhớ tạm!",
+        needMoreLogs: "Cần 2+ bản ghi",
+        dueNow: "ĐẾN HẠN BẢO DƯỠNG",
+        kmLeft: "km nữa",
+        markDone: "Hoàn Thành",
+        noLogs: "Chưa có bản ghi nhiên liệu hoặc điện nào."
+      },
+      zh: {
+        appTitle: "HybridLog Pro — HEV & EV 能耗与维护追踪器",
+        lblKpiFuel: "平均油耗",
+        lblKpiCost: "每公里综合成本",
+        lblKpiSpend: "能源总支出",
+        lblKpiEv: "EV 能效",
+        lblLogTitle: "➕ 记录加油或充电",
+        btnFuelMode: "⛽ 加油 (升)",
+        btnEvMode: "🔌 充电 (kWh)",
+        lblDate: "日期",
+        lblOdo: "里程表 (km)",
+        lblVolFuel: "添加燃油 (升)",
+        lblVolEv: "添加电量 (kWh)",
+        lblPriceFuel: "每升单价",
+        lblPriceEv: "每kWh单价",
+        lblTotal: "总费用",
+        lblNote: "加油站 / 充电桩",
+        btnSave: "保存记录",
+        lblTripTitle: "🧭 行程成本与乘客分摊",
+        lblTripDist: "行程距离 (km)",
+        lblTripEff: "油耗 (L/100km)",
+        lblTripFuel: "油价 / 升",
+        lblTripEv: "额外充电费用",
+        lblTripTolls: "过路费 / 停车费",
+        lblTripPax: "分摊人数 (人)",
+        lblEstTotal: "预估行程总成本",
+        btnCopyTrip: "📋 复制行程明细",
+        lblMaintTitle: "🛠️ 混合动力保养周期",
+        lblUpdateOdo: "更新当前里程",
+        btnUpdateOdo: "更新里程",
+        lblHistoryTitle: "📊 历史日志记录",
+        btnDlCsv: "⬇️ 下载 CSV",
+        btnCopyCsv: "📋 复制 CSV",
+        btnResetData: "重置所有应用数据",
+        navDash: "仪表盘",
+        navTrip: "行程分摊",
+        navMaint: "保养",
+        navHistory: "历史",
+        toastSaved: "已保存！",
+        toastLogged: "记录已保存！",
+        toastDeleted: "记录已删除",
+        toastOdoUpdated: "里程已更新",
+        toastTripCopied: "行程明细已复制！",
+        toastCsvDl: "CSV已下载！",
+        toastCsvCopied: "CSV已复制到剪贴板！",
+        needMoreLogs: "需要2条以上记录",
+        dueNow: "到期需保养",
+        kmLeft: "km剩余",
+        markDone: "完成",
+        noLogs: "暂无加油或充电记录。"
+      },
+      ja: {
+        appTitle: "HybridLog Pro — HEV & EV 効率トラッカー",
+        lblKpiFuel: "平均燃費",
+        lblKpiCost: "1kmあたりのコスト",
+        lblKpiSpend: "総エネルギー支出",
+        lblKpiEv: "EV効率",
+        lblLogTitle: "➕ 給油または充電を記録",
+        btnFuelMode: "⛽ ガソリン (L)",
+        btnEvMode: "🔌 EV充電 (kWh)",
+        lblDate: "日付",
+        lblOdo: "オドメーター (km)",
+        lblVolFuel: "給油量 (L)",
+        lblVolEv: "充電量 (kWh)",
+        lblPriceFuel: "1Lあたりの価格",
+        lblPriceEv: "1kWhあたりの価格",
+        lblTotal: "合計金額",
+        lblNote: "スタンド / 充電器",
+        btnSave: "記録を保存",
+        lblTripTitle: "🧭 トリップコスト＆割り勘計算",
+        lblTripDist: "走行距離 (km)",
+        lblTripEff: "燃費 (L/100km)",
+        lblTripFuel: "ガソリン単価 / L",
+        lblTripEv: "追加充電費用",
+        lblTripTolls: "有料道路・駐車料金",
+        lblTripPax: "割り勘人数 (人)",
+        lblEstTotal: "推定トリップ総コスト",
+        btnCopyTrip: "📋 トリップ内訳をコピー",
+        lblMaintTitle: "🛠️ ハイブリッド整備インターバル",
+        lblUpdateOdo: "現在のオドメーターを更新",
+        btnUpdateOdo: "更新",
+        lblHistoryTitle: "📊 履歴ログ",
+        btnDlCsv: "⬇️ CSVダウンロード",
+        btnCopyCsv: "📋 CSVコピー",
+        btnResetData: "すべてのデータをリセット",
+        navDash: "ダッシュボード",
+        navTrip: "トリップ",
+        navMaint: "整備",
+        navHistory: "履歴",
+        toastSaved: "保存しました！",
+        toastLogged: "記録しました！",
+        toastDeleted: "記録を削除しました",
+        toastOdoUpdated: "オドメーターを更新しました",
+        toastTripCopied: "トリップ内訳をコピーしました！",
+        toastCsvDl: "CSVをダウンロードしました！",
+        toastCsvCopied: "CSVをクリップボードにコピーしました！",
+        needMoreLogs: "2件以上の記録が必要",
+        dueNow: "要メンテナンス",
+        kmLeft: "km残り",
+        markDone: "完了",
+        noLogs: "給油または充電の記録がまだありません。"
+      },
+      ko: {
+        appTitle: "HybridLog Pro — HEV & EV 효율성 트래커",
+        lblKpiFuel: "평균 연비",
+        lblKpiCost: "km당 통합 비용",
+        lblKpiSpend: "총 에너지 지출",
+        lblKpiEv: "EV 효율",
+        lblLogTitle: "➕ 주유 또는 충전 기록",
+        btnFuelMode: "⛽ 주유 (L)",
+        btnEvMode: "🔌 EV 충전 (kWh)",
+        lblDate: "날짜",
+        lblOdo: "주행거리계 (km)",
+        lblVolFuel: "주유량 (L)",
+        lblVolEv: "충전량 (kWh)",
+        lblPriceFuel: "리터당 가격",
+        lblPriceEv: "kWh당 가격",
+        lblTotal: "총 비용",
+        lblNote: "주유소 / 충전소",
+        btnSave: "기록 저장",
+        lblTripTitle: "🧭 여행 비용 및 승객 정산",
+        lblTripDist: "이동 거리 (km)",
+        lblTripEff: "연비 (L/100km)",
+        lblTripFuel: "리터당 기름값",
+        lblTripEv: "추가 EV 충전 비용",
+        lblTripTolls: "통행료 / 주차비",
+        lblTripPax: "정산 인원 (명)",
+        lblEstTotal: "예상 총 여행 비용",
+        btnCopyTrip: "📋 여행 내역 복사",
+        lblMaintTitle: "🛠️ 하이브리드 점검 주기",
+        lblUpdateOdo: "현재 주행거리 업데이트",
+        btnUpdateOdo: "업데이트",
+        lblHistoryTitle: "📊 기록 로그",
+        btnDlCsv: "⬇️ CSV 다운로드",
+        btnCopyCsv: "📋 CSV 복사",
+        btnResetData: "모든 앱 데이터 초기화",
+        navDash: "대시보드",
+        navTrip: "여행 정산",
+        navMaint: "정비",
+        navHistory: "기록",
+        toastSaved: "저장되었습니다!",
+        toastLogged: "기록되었습니다!",
+        toastDeleted: "기록이 삭제되었습니다",
+        toastOdoUpdated: "주행거리가 업데이트되었습니다",
+        toastTripCopied: "여행 내역이 복사되었습니다!",
+        toastCsvDl: "CSV가 다운로드되었습니다!",
+        toastCsvCopied: "CSV가 클립보드에 복사되었습니다!",
+        needMoreLogs: "2개 이상의 기록 필요",
+        dueNow: "점검 시기 도래",
+        kmLeft: "km 남음",
+        markDone: "완료",
+        noLogs: "등록된 주유 또는 충전 기록이 없습니다."
+      }
+    };
+
     function init() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -652,8 +937,10 @@
           state = { ...state, ...JSON.parse(saved) };
         } catch (e) { console.error(e); }
       }
+      document.getElementById('langSelect').value = state.lang;
       document.getElementById('currencySelect').value = state.currency;
       document.getElementById('in-date').valueAsDate = new Date();
+      applyLanguage();
       renderAll();
       calcTrip();
     }
@@ -684,6 +971,53 @@
       calcTrip();
     }
 
+    function updateLanguage() {
+      state.lang = document.getElementById('langSelect').value;
+      saveState();
+      applyLanguage();
+      renderAll();
+      calcTrip();
+    }
+
+    function applyLanguage() {
+      const t = translations[state.lang] || translations.en;
+      document.getElementById('appTitle').textContent = t.appTitle;
+      document.getElementById('lbl-kpi-fuel').textContent = t.lblKpiFuel;
+      document.getElementById('lbl-kpi-cost').textContent = t.lblKpiCost;
+      document.getElementById('lbl-kpi-spend').textContent = t.lblKpiSpend;
+      document.getElementById('lbl-kpi-ev').textContent = t.lblKpiEv;
+      document.getElementById('lbl-log-title').textContent = t.lblLogTitle;
+      document.getElementById('btn-mode-fuel').textContent = t.btnFuelMode;
+      document.getElementById('btn-mode-ev').textContent = t.btnEvMode;
+      document.getElementById('lbl-date').textContent = t.lblDate;
+      document.getElementById('lbl-odo').textContent = t.lblOdo;
+      document.getElementById('lbl-volume').textContent = entryMode === 'fuel' ? t.lblVolFuel : t.lblVolEv;
+      document.getElementById('lbl-price').textContent = entryMode === 'fuel' ? t.lblPriceFuel : t.lblPriceEv;
+      document.getElementById('lbl-total').textContent = t.lblTotal;
+      document.getElementById('lbl-note').textContent = t.lblNote;
+      document.getElementById('btn-save').textContent = t.btnSave;
+      document.getElementById('lbl-trip-title').textContent = t.lblTripTitle;
+      document.getElementById('lbl-trip-dist').textContent = t.lblTripDist;
+      document.getElementById('lbl-trip-eff').textContent = t.lblTripEff;
+      document.getElementById('lbl-trip-fuel').textContent = t.lblTripFuel;
+      document.getElementById('lbl-trip-ev').textContent = t.lblTripEv;
+      document.getElementById('lbl-trip-tolls').textContent = t.lblTripTolls;
+      document.getElementById('lbl-trip-pax').textContent = t.lblTripPax;
+      document.getElementById('lbl-est-total').textContent = t.lblEstTotal;
+      document.getElementById('btn-copy-trip').textContent = t.btnCopyTrip;
+      document.getElementById('lbl-maint-title').textContent = t.lblMaintTitle;
+      document.getElementById('lbl-update-odo').textContent = t.lblUpdateOdo;
+      document.getElementById('btn-update-odo').textContent = t.btnUpdateOdo;
+      document.getElementById('lbl-history-title').textContent = t.lblHistoryTitle;
+      document.getElementById('btn-dl-csv').textContent = t.btnDlCsv;
+      document.getElementById('btn-copy-csv').textContent = t.btnCopyCsv;
+      document.getElementById('btn-reset-data').textContent = t.btnResetData;
+      document.getElementById('nav-dash').textContent = t.navDash;
+      document.getElementById('nav-trip').textContent = t.navTrip;
+      document.getElementById('nav-maint').textContent = t.navMaint;
+      document.getElementById('nav-history').textContent = t.navHistory;
+    }
+
     function switchTab(tabId, btn) {
       document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -693,19 +1027,20 @@
 
     function setEntryMode(mode) {
       entryMode = mode;
+      const t = translations[state.lang] || translations.en;
       const fBtn = document.getElementById('btn-mode-fuel');
       const eBtn = document.getElementById('btn-mode-ev');
       if (mode === 'fuel') {
         fBtn.className = 'mode-btn active fuel';
         eBtn.className = 'mode-btn';
-        document.getElementById('lbl-volume').textContent = 'Fuel Added (Liters)';
-        document.getElementById('lbl-price').textContent = 'Price per Liter';
+        document.getElementById('lbl-volume').textContent = t.lblVolFuel;
+        document.getElementById('lbl-price').textContent = t.lblPriceFuel;
         document.getElementById('in-vol').placeholder = 'e.g. 38.5';
       } else {
         eBtn.className = 'mode-btn active ev';
         fBtn.className = 'mode-btn';
-        document.getElementById('lbl-volume').textContent = 'Energy Added (kWh)';
-        document.getElementById('lbl-price').textContent = 'Price per kWh';
+        document.getElementById('lbl-volume').textContent = t.lblVolEv;
+        document.getElementById('lbl-price').textContent = t.lblPriceEv;
         document.getElementById('in-vol').placeholder = 'e.g. 18.4';
       }
     }
@@ -719,6 +1054,7 @@
     }
 
     function addLogEntry() {
+      const t = translations[state.lang] || translations.en;
       const date = document.getElementById('in-date').value || new Date().toISOString().slice(0, 10);
       const odo = parseFloat(document.getElementById('in-odo').value);
       const vol = parseFloat(document.getElementById('in-vol').value) || 0;
@@ -755,32 +1091,34 @@
       saveState();
       renderAll();
 
-      // Clear inputs
       document.getElementById('in-vol').value = '';
       document.getElementById('in-total').value = '';
       document.getElementById('in-note').value = '';
-      showToast('Entry logged!');
+      showToast(t.toastLogged);
     }
 
     function deleteLog(id) {
+      const t = translations[state.lang] || translations.en;
       state.logs = state.logs.filter(l => l.id !== id);
       saveState();
       renderAll();
-      showToast('Entry deleted');
+      showToast(t.toastDeleted);
     }
 
     function setManualOdo() {
+      const t = translations[state.lang] || translations.en;
       const val = parseFloat(document.getElementById('manual-odo').value);
       if (val && val > 0) {
         state.currentOdo = val;
         saveState();
         renderAll();
         document.getElementById('manual-odo').value = '';
-        showToast('Odometer updated');
+        showToast(t.toastOdoUpdated);
       }
     }
 
     function resetService(id) {
+      const t = translations[state.lang] || translations.en;
       const svc = state.services.find(s => s.id === id);
       if (svc) {
         svc.lastOdo = state.currentOdo;
@@ -797,6 +1135,7 @@
     }
 
     function renderKPIs() {
+      const t = translations[state.lang] || translations.en;
       const logs = state.logs;
       const latestOdo = logs.length ? Math.max(state.currentOdo, logs[logs.length - 1].odo) : state.currentOdo;
       document.getElementById('last-odo-badge').textContent = `Last Odo: ${latestOdo.toLocaleString()} km`;
@@ -828,7 +1167,6 @@
           const costPerKm = totalSpend / dist;
           document.getElementById('kpi-costkm').textContent = `${formatMoney(costPerKm)}/km`;
 
-          // Fuel liters after first fill-up
           let fuelAfterFirst = 0;
           for (let i = 1; i < logs.length; i++) {
             if (logs[i].type === 'fuel') fuelAfterFirst += logs[i].vol;
@@ -844,13 +1182,14 @@
         }
       } else {
         document.getElementById('kpi-l100').textContent = '-- L/100km';
-        document.getElementById('kpi-kml').textContent = 'Need 2+ logs';
+        document.getElementById('kpi-kml').textContent = t.needMoreLogs;
         document.getElementById('kpi-costkm').textContent = '--';
         document.getElementById('kpi-dist').textContent = '0 km tracked';
       }
     }
 
     function renderMaintenance() {
+      const t = translations[state.lang] || translations.en;
       const container = document.getElementById('maint-list');
       container.innerHTML = '';
       state.services.forEach(s => {
@@ -867,7 +1206,7 @@
           <div class="maint-header">
             <span>${s.name}</span>
             <span style="color:${pct >= 100 ? 'var(--danger)' : 'var(--muted)'}">
-              ${remaining > 0 ? remaining.toLocaleString() + ' km left' : 'DUE NOW'}
+              ${remaining > 0 ? remaining.toLocaleString() + ' ' + t.kmLeft : t.dueNow}
             </span>
           </div>
           <div class="progress-bg">
@@ -875,7 +1214,7 @@
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:7px;">
             <span style="font-size:11px; color:var(--muted);">Every ${s.interval.toLocaleString()} km (Last: ${s.lastOdo.toLocaleString()})</span>
-            <button type="button" class="btn btn-outline" style="width:auto; padding:4px 9px; font-size:11px;" onclick="resetService('${s.id}')">Mark Done</button>
+            <button type="button" class="btn btn-outline" style="width:auto; padding:4px 9px; font-size:11px;" onclick="resetService('${s.id}')">${t.markDone}</button>
           </div>
         `;
         container.appendChild(div);
@@ -883,10 +1222,11 @@
     }
 
     function renderHistory() {
+      const t = translations[state.lang] || translations.en;
       const list = document.getElementById('history-list');
       document.getElementById('log-count').textContent = `${state.logs.length} entries`;
       if (!state.logs.length) {
-        list.innerHTML = '<div style="text-align:center; color:var(--muted); font-size:13px; padding:20px 0;">No fuel or EV logs recorded yet.</div>';
+        list.innerHTML = `<div style="text-align:center; color:var(--muted); font-size:13px; padding:20px 0;">${t.noLogs}</div>`;
         return;
       }
 
@@ -929,12 +1269,13 @@
     }
 
     function copyTripSummary() {
+      const t = translations[state.lang] || translations.en;
       const dist = document.getElementById('trip-dist').value;
       const total = document.getElementById('trip-total-out').textContent;
       const split = document.getElementById('trip-split-out').textContent;
       const fuel = document.getElementById('trip-fuel-used').textContent;
       const text = `HybridLog Trip Estimate (${dist} km)\nTotal Cost: ${total}\n${split}\n${fuel}`;
-      navigator.clipboard.writeText(text).then(() => showToast('Trip summary copied!'));
+      navigator.clipboard.writeText(text).then(() => showToast(t.toastTripCopied));
     }
 
     function buildCSV() {
@@ -952,6 +1293,7 @@
     }
 
     function exportCSV() {
+      const t = translations[state.lang] || translations.en;
       if (!state.logs.length) {
         showToast('No logs to export');
         return;
@@ -964,15 +1306,16 @@
       a.download = `HybridLog_Export_${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
       URL.revokeObjectURL(url);
-      showToast('CSV downloaded!');
+      showToast(t.toastCsvDl);
     }
 
     function copyCSVClipboard() {
+      const t = translations[state.lang] || translations.en;
       if (!state.logs.length) {
         showToast('No logs to copy');
         return;
       }
-      navigator.clipboard.writeText(buildCSV()).then(() => showToast('CSV copied to clipboard!'));
+      navigator.clipboard.writeText(buildCSV()).then(() => showToast(t.toastCsvCopied));
     }
 
     function clearAllData() {
